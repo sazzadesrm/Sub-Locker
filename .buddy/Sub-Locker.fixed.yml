@@ -6,6 +6,12 @@
   events:
   - type: WEBHOOK
   actions:
+  - action: Claude Code 2
+    type: CLAUDE_CODE
+    integration: anthropic
+    prompts:
+    - "I want to build an Android app and package it as an installable APK. \nPlease set this up end-to-end in this project folder.\n\nApp details:\n- App name: [YOUR APP NAME]\n- Purpose / core features: [DESCRIBE WHAT THE APP DOES — e.g. \"a simple \n  expense tracker with categories, monthly totals, and local storage\"]\n- Target platform: Android only\n- Minimum Android SDK version: [e.g. API 24 (Android 7.0)]\n- Package name: [e.g. com.yourname.appname]\n\nTech stack:\n- Use [React Native / Flutter / Capacitor with a web frontend / native \n  Kotlin] — pick whichever is best suited for this app and explain why \n  if you choose something other than what I listed.\n- Keep the UI clean and functional; no need for elaborate design unless \n  I ask for it.\n\nWhat I need you to do:\n1. Check whether the Android SDK, build tools, and any required CLI \n   tools (Gradle, Node, Flutter SDK, etc.) are installed. If not, tell \n   me what's missing and how to install it — don't assume it's already set up.\n2. Scaffold the project with a sensible folder structure.\n3. Implement the core features listed above.\n4. Configure the build (build.gradle / app config) with the app name, \n   package name, and min SDK version above.\n5. Build a debug APK I can install directly on a device for testing \n   (skip signing/release config unless I ask for it).\n6. Tell me exactly where the final .apk file is and how to install it \n   on my phone (e.g. via adb install or transferring the file).\n7. If the build fails, debug it and fix the issue rather than just \n   reporting the error.\n\nAsk me clarifying questions before starting if anything about the app's \nfeatures or scope is unclear."
+    model: sonnet
   - action: Claude Code
     type: CLAUDE_CODE
     integration: anthropic
