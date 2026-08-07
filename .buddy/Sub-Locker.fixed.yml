@@ -5,3 +5,10 @@
   fail_on_prepare_env_warning: true
   events:
   - type: WEBHOOK
+  actions:
+  - action: Claude Code
+    type: CLAUDE_CODE
+    integration: anthropic
+    prompts:
+    - Make apk
+    model: sonnet
