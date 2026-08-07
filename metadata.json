@@ -1,0 +1,6 @@
+{
+  "name": "Subscription Manager",
+  "description": "Smart subscription manager with automated renewal alerts, spend analytics, multi-currency conversion, and dark mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
