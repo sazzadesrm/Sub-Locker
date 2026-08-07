@@ -7,3 +7,15 @@ plugins {
   alias(libs.plugins.secrets) apply false
   alias(libs.plugins.google.services) apply false
 }
+android {
+    namespace 'com.your.package.name'
+    compileSdk 34  // <-- Update this to 34 or higher
+
+    defaultConfig {
+        applicationId "com.your.package.name"
+        minSdk 21     // <-- Sometimes a dependency requires you to raise this too
+        targetSdk 34  // <-- Update this to match
+        versionCode 1
+        versionName "1.0"
+    }
+}
