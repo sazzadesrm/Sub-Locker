@@ -7,16 +7,3 @@ plugins {
   alias(libs.plugins.secrets) apply false
   alias(libs.plugins.google.services) apply false
 }
-android {
-    namespace 'com.yourname.appname'
-    compileSdk 34  // <-- CHANGE THIS TO 34 or 35
-
-    defaultConfig {
-        applicationId "com.yourname.appname"
-        minSdk 24      // <-- Make sure this isn't too low (some libraries require 24+)
-        targetSdk 34   // <-- CHANGE THIS TO MATCH compileSdk
-        versionCode 1
-        versionName "1.0"
-    }
-}
-
