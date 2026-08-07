@@ -10,17 +10,16 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
-  compileSdk { version = release(36) { minorApiLevel = 1 } }
+    namespace 'com.yourname.appname'
+    compileSdk 34  // <-- CHANGE THIS TO 34 or 35
 
-  defaultConfig {
-    applicationId = "com.aistudio.subscriptionmanager.subapp"
-    minSdk = 24
-    targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
-
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    defaultConfig {
+        applicationId "com.yourname.appname"
+        minSdk 24      // <-- Make sure this isn't too low (some libraries require 24+)
+        targetSdk 34   // <-- CHANGE THIS TO MATCH compileSdk
+        versionCode 1
+        versionName "1.0"
+    }
   }
 
   signingConfigs {
