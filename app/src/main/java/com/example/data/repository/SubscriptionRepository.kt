@@ -181,13 +181,15 @@ class SubscriptionRepository(
                     isLoggedIn = true,
                     name = "Sazzad Hossain",
                     email = "sazzadmbstu@gmail.com",
-                    preferredCurrency = "USD",
+                    preferredCurrency = "TK",
                     isDarkMode = true,
                     notificationsEnabled = true,
                     defaultReminderDays = 3,
                     authProvider = "GOOGLE"
                 )
             )
+        } else if (existingProfile.preferredCurrency == "USD") {
+            userProfileDao.updateCurrency("TK")
         }
     }
 
@@ -230,6 +232,14 @@ class SubscriptionRepository(
         )
     }
 
+    suspend fun updateNotificationsEnabled(enabled: Boolean) = withContext(Dispatchers.IO) {
+        userProfileDao.updateNotificationsEnabled(enabled)
+    }
+
+    suspend fun updateDefaultReminderDays(days: Int) = withContext(Dispatchers.IO) {
+        userProfileDao.updateDefaultReminderDays(days)
+    }
+
     suspend fun updateCurrency(currencyCode: String) = withContext(Dispatchers.IO) {
         userProfileDao.updateCurrency(currencyCode)
     }
@@ -248,6 +258,23 @@ class SubscriptionRepository(
 
     suspend fun clearAllNotifications() = withContext(Dispatchers.IO) {
         notificationDao.clearAll()
+    }
+
+    suspend fun addNotification(
+        subscriptionId: Int = 0,
+        subscriptionName: String = "",
+        title: String,
+        message: String
+    ) = withContext(Dispatchers.IO) {
+        notificationDao.insertNotification(
+            NotificationEntity(
+                subscriptionId = subscriptionId,
+                subscriptionName = subscriptionName,
+                title = title,
+                message = message,
+                timestamp = System.currentTimeMillis()
+            )
+        )
     }
 
     suspend fun setLoginState(isLoggedIn: Boolean) = withContext(Dispatchers.IO) {

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.Gamepad
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.PauseCircle
+import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Work
@@ -47,6 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,8 +69,10 @@ fun SubscriptionCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onTogglePause: () -> Unit,
+    onMarkPaid: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     val subCurrency = Currency.fromCode(subscription.currency)
     val convertedAmount = Currency.convert(subscription.price, subCurrency, displayCurrency)
     val formattedPrice = Currency.format(convertedAmount, displayCurrency)
@@ -101,7 +107,10 @@ fun SubscriptionCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("subscription_card_${subscription.id}")
-            .clickable { onEdit() },
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onEdit()
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -186,7 +195,10 @@ fun SubscriptionCard(
                 // More Menu Button
                 Box {
                     IconButton(
-                        onClick = { showMenu = true },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            showMenu = true
+                        },
                         modifier = Modifier.testTag("subscription_menu_${subscription.id}")
                     ) {
                         Icon(
@@ -201,9 +213,19 @@ fun SubscriptionCard(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            text = { Text("Mark as Paid", fontWeight = FontWeight.SemiBold) },
+                            onClick = {
+                                showMenu = false
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onMarkPaid()
+                            },
+                            leadingIcon = { Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                        )
+                        DropdownMenuItem(
                             text = { Text("Edit Subscription") },
                             onClick = {
                                 showMenu = false
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onEdit()
                             },
                             leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
@@ -212,6 +234,7 @@ fun SubscriptionCard(
                             text = { Text(if (subscription.status == "PAUSED") "Resume Subscription" else "Pause Subscription") },
                             onClick = {
                                 showMenu = false
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onTogglePause()
                             },
                             leadingIcon = {
@@ -225,6 +248,7 @@ fun SubscriptionCard(
                             text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 showMenu = false
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onDelete()
                             },
                             leadingIcon = {
@@ -241,23 +265,59 @@ fun SubscriptionCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Renewal status pill & Payment method
+            // Renewal status pill & Quick Mark Paid button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = badgeColor.copy(alpha = 0.15f)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = renewalStatusText,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = badgeColor,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = badgeColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = renewalStatusText,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = badgeColor,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    if (daysUntilRenewal <= 7 && subscription.status == "ACTIVE") {
+                        Surface(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onMarkPaid()
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.testTag("quick_mark_paid_button_${subscription.id}")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Mark Paid",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = "Mark Paid",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (subscription.paymentMethod.isNotEmpty()) {

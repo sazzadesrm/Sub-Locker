@@ -11,7 +11,7 @@ data class UserProfileEntity(
     val name: String = "Sazzad Hossain",
     val email: String = "sazzadmbstu@gmail.com",
     val phone: String = "+1 (555) 234-5678",
-    val preferredCurrency: String = "USD",
+    val preferredCurrency: String = "TK",
     val isDarkMode: Boolean = true,
     val notificationsEnabled: Boolean = true,
     val defaultReminderDays: Int = 3,

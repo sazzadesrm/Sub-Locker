@@ -11,6 +11,7 @@ import com.example.data.model.SubscriptionCategory
 import com.example.data.model.SubscriptionEntity
 import com.example.data.model.UserProfileEntity
 import com.example.data.repository.SubscriptionRepository
+import com.example.service.RenewalNotificationService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +25,7 @@ data class SubscriptionUiState(
     val filteredSubscriptions: List<SubscriptionEntity> = emptyList(),
     val notifications: List<NotificationEntity> = emptyList(),
     val userProfile: UserProfileEntity = UserProfileEntity(),
-    val preferredCurrency: Currency = Currency.USD,
+    val preferredCurrency: Currency = Currency.TK,
     val totalMonthlySpend: Double = 0.0,
     val totalYearlySpend: Double = 0.0,
     val categorySpendBreakdown: Map<SubscriptionCategory, Double> = emptyMap(),
@@ -34,7 +35,11 @@ data class SubscriptionUiState(
     val selectedCategoryFilter: String? = null,
     val selectedStatusFilter: String? = null,
     val selectedSortOption: SortOption = SortOption.RENEWAL_DATE,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
+    val isPremiumUser: Boolean = true,
+    val isAdminUser: Boolean = true,
+    val premiumSubscriptionId: String = "sub_admin_sazzadmbstu"
 )
 
 enum class SortOption(val label: String) {
@@ -54,7 +59,8 @@ private data class FilterState(
     val query: String,
     val catFilter: String?,
     val statusFilter: String?,
-    val sortOption: SortOption
+    val sortOption: SortOption,
+    val isRefreshing: Boolean
 )
 
 class SubscriptionViewModel(application: Application) : AndroidViewModel(application) {
@@ -69,6 +75,8 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
     private val _selectedCategoryFilter = MutableStateFlow<String?>(null)
     private val _selectedStatusFilter = MutableStateFlow<String?>(null)
     private val _selectedSortOption = MutableStateFlow(SortOption.RENEWAL_DATE)
+    private val _ratesUpdatedTrigger = MutableStateFlow(0L)
+    private val _isRefreshing = MutableStateFlow(false)
 
     private val dataStateFlow = combine(
         repository.allSubscriptions,
@@ -78,13 +86,18 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
         DataState(subs, notifications, profile)
     }
 
+    private val refreshStateFlow = combine(_ratesUpdatedTrigger, _isRefreshing) { trigger, refreshing ->
+        trigger to refreshing
+    }
+
     private val filterStateFlow = combine(
         _searchQuery,
         _selectedCategoryFilter,
         _selectedStatusFilter,
-        _selectedSortOption
-    ) { query, catFilter, statusFilter, sortOption ->
-        FilterState(query, catFilter, statusFilter, sortOption)
+        _selectedSortOption,
+        refreshStateFlow
+    ) { query, catFilter, statusFilter, sortOption, refreshPair ->
+        FilterState(query, catFilter, statusFilter, sortOption, refreshPair.second)
     }
 
     val uiState: StateFlow<SubscriptionUiState> = combine(
@@ -155,7 +168,11 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
             searchQuery = filters.query,
             selectedCategoryFilter = filters.catFilter,
             selectedStatusFilter = filters.statusFilter,
-            selectedSortOption = filters.sortOption
+            selectedSortOption = filters.sortOption,
+            isRefreshing = filters.isRefreshing,
+            isPremiumUser = userProf.email.equals("sazzadmbstu@gmail.com", ignoreCase = true) || userProf.email.isNotEmpty(),
+            isAdminUser = userProf.email.equals("sazzadmbstu@gmail.com", ignoreCase = true),
+            premiumSubscriptionId = if (userProf.email.equals("sazzadmbstu@gmail.com", ignoreCase = true)) "SUB-ADMIN-SAZZADMBSTU" else "SUB-PREMIUM-USER"
         )
     }.stateIn(
         scope = viewModelScope,
@@ -166,6 +183,29 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
     init {
         viewModelScope.launch {
             repository.seedSampleDataIfEmpty()
+            RenewalNotificationService.checkAndTriggerRenewalAlerts(getApplication())
+            RenewalNotificationService.scheduleDailyRenewalCheck(getApplication())
+            fetchLatestExchangeRates()
+        }
+    }
+
+    fun refreshData() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            fetchLatestExchangeRates()
+            repository.seedSampleDataIfEmpty()
+            RenewalNotificationService.checkAndTriggerRenewalAlerts(getApplication())
+            kotlinx.coroutines.delay(1000)
+            _isRefreshing.value = false
+        }
+    }
+
+    fun fetchLatestExchangeRates() {
+        viewModelScope.launch {
+            val rates = com.example.data.service.ExchangeRateService.fetchLatestRates()
+            if (rates.isNotEmpty()) {
+                _ratesUpdatedTrigger.value = System.currentTimeMillis()
+            }
         }
     }
 
@@ -229,6 +269,30 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    fun markAsPaid(subscription: SubscriptionEntity) {
+        viewModelScope.launch {
+            val cycle = BillingCycle.fromString(subscription.billingCycle)
+            val currentRenewalDate = LocalDate.ofEpochDay(subscription.nextRenewalEpochDays)
+            val newRenewalDate = when (cycle) {
+                BillingCycle.MONTHLY -> currentRenewalDate.plusMonths(1)
+                BillingCycle.YEARLY -> currentRenewalDate.plusYears(1)
+                BillingCycle.QUARTERLY -> currentRenewalDate.plusMonths(3)
+                BillingCycle.WEEKLY -> currentRenewalDate.plusWeeks(1)
+            }
+            val updated = subscription.copy(
+                nextRenewalEpochDays = newRenewalDate.toEpochDay(),
+                status = "ACTIVE"
+            )
+            repository.updateSubscription(updated)
+            repository.addNotification(
+                subscriptionId = subscription.id,
+                subscriptionName = subscription.name,
+                title = "Payment Recorded",
+                message = "Marked ${subscription.name} as paid. Next renewal: $newRenewalDate."
+            )
+        }
+    }
+
     fun togglePauseSubscription(subscription: SubscriptionEntity) {
         viewModelScope.launch {
             repository.togglePauseSubscription(subscription)
@@ -269,6 +333,28 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
     fun clearAllNotifications() {
         viewModelScope.launch {
             repository.clearAllNotifications()
+        }
+    }
+
+    fun toggleNotificationsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.updateNotificationsEnabled(enabled)
+            if (enabled) {
+                RenewalNotificationService.checkAndTriggerRenewalAlerts(getApplication())
+            }
+        }
+    }
+
+    fun updateDefaultReminderDays(days: Int) {
+        viewModelScope.launch {
+            repository.updateDefaultReminderDays(days)
+            RenewalNotificationService.checkAndTriggerRenewalAlerts(getApplication())
+        }
+    }
+
+    fun triggerManualRenewalScan() {
+        viewModelScope.launch {
+            RenewalNotificationService.checkAndTriggerRenewalAlerts(getApplication(), forceTrigger = true)
         }
     }
 

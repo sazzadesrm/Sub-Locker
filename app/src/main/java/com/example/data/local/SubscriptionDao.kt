@@ -14,6 +14,9 @@ interface SubscriptionDao {
     @Query("SELECT * FROM subscriptions ORDER BY nextRenewalEpochDays ASC")
     fun getAllSubscriptions(): Flow<List<SubscriptionEntity>>
 
+    @Query("SELECT * FROM subscriptions WHERE status IN ('ACTIVE', 'TRIAL')")
+    suspend fun getActiveSubscriptionsOnce(): List<SubscriptionEntity>
+
     @Query("SELECT * FROM subscriptions WHERE id = :id")
     suspend fun getSubscriptionById(id: Int): SubscriptionEntity?
 

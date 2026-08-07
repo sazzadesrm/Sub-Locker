@@ -2,31 +2,24 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Elegant Dark Palette (Material 3 Dark Lavender & Deep Charcoal)
-val ElegantDarkBg = Color(0xFF1C1B1F)
-val ElegantDarkSurface = Color(0xFF211F26)
-val ElegantDarkSurfaceVariant = Color(0xFF2B2930)
-val ElegantDarkPrimaryContainer = Color(0xFF4A4458)
-val ElegantDarkPrimary = Color(0xFFD0BCFF)
-val ElegantDarkOnPrimary = Color(0xFF381E72)
-val ElegantDarkOnPrimaryContainer = Color(0xFFE8DEF8)
+// Brand Color Palette & Styling Tokens
+val BrandPrimary = Color(0xFF3B82F6)         // #3B82F6 - Primary
+val BrandSecondary = Color(0xFF64748B)       // #64748B - Secondary
+val BrandAccent = Color(0xFF06B6D4)          // #06B6D4 - Accent
+val BrandBackground = Color(0xFF0F172A)      // #0F172A - Background
+val BrandSurface = Color(0xFF1E293B)         // #1E293B - Surface
+val BrandText = Color(0xFFF8FAFC)            // #F8FAFC - Text
 
-val ElegantTextMain = Color(0xFFE6E1E5)
-val ElegantTextMuted = Color(0xFF938F99)
-val ElegantTextVariant = Color(0xFFCAC4D0)
-val ElegantBorder = Color(0xFF49454F)
+// Container & Helper Tokens
+val BrandSurfaceVariant = Color(0xFF334155)
+val BrandPrimaryContainer = Color(0xFF1D4ED8)
+val BrandOnPrimaryContainer = Color(0xFFEFF6FF)
+val BrandTextSecondary = Color(0xFF94A3B8)
+val BrandTextMuted = Color(0xFF64748B)
+val BrandBorder = Color(0xFF334155)
 
-val ElegantAlertBg = Color(0xFF8C1D18)
-val ElegantAlertContainer = Color(0xFF2B2930)
-val ElegantAlertText = Color(0xFFF9DEDC)
-val ElegantAlertAccent = Color(0xFFF2B8B5)
+val BrandAlertBg = Color(0xFF7F1D1D)
+val BrandAlertText = Color(0xFFFEE2E2)
+val BrandAlertAccent = Color(0xFFEF4444)
 
-// Light variant fallback
-val ElegantLightBg = Color(0xFFF6F2F7)
-val ElegantLightSurface = Color(0xFFFFFFFF)
-val ElegantLightSurfaceVariant = Color(0xFFE7E0EC)
-val ElegantLightPrimary = Color(0xFF6750A4)
-val ElegantLightOnPrimary = Color(0xFFFFFFFF)
-val ElegantLightPrimaryContainer = Color(0xFFEADDFF)
-val ElegantLightOnPrimaryContainer = Color(0xFF21005D)
 

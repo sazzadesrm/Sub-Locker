@@ -75,25 +75,18 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
         // Top Branding Header
-        Box(
+        Image(
+            painter = painterResource(id = R.drawable.sub_locker_logo_1786116565811),
+            contentDescription = "Sub Locker Logo",
             modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Shield,
-                contentDescription = "Subify Security Logo",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(40.dp)
-            )
-        }
+                .size(80.dp)
+                .clip(RoundedCornerShape(20.dp))
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Welcome to Subify",
+            text = "Welcome to Sub Locker",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground

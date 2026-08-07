@@ -12,6 +12,9 @@ interface NotificationDao {
     @Query("SELECT * FROM notifications ORDER BY timestamp DESC")
     fun getAllNotifications(): Flow<List<NotificationEntity>>
 
+    @Query("SELECT COUNT(*) FROM notifications WHERE subscriptionId = :subId AND timestamp >= :sinceTimestamp")
+    suspend fun getCountForSubscriptionSince(subId: Int, sinceTimestamp: Long): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNotification(notification: NotificationEntity)
 

@@ -34,6 +34,7 @@ import com.example.data.model.BillingCycle
 import com.example.data.model.Currency
 import com.example.data.model.SubscriptionCategory
 import com.example.ui.SubscriptionUiState
+import com.example.ui.components.MonthlySpendingTrendChart
 import com.example.ui.components.SpendChart
 
 @Composable
@@ -193,6 +194,16 @@ fun AnalyticsScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Monthly Subscription Spending Trends Over Past Year (Recharts-Style Visualizer)
+        item {
+            MonthlySpendingTrendChart(
+                subscriptions = state.subscriptions,
+                preferredCurrency = displayCurrency
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }

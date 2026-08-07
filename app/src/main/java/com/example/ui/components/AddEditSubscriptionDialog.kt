@@ -79,7 +79,7 @@ fun AddEditSubscriptionBottomSheet(
 
     var name by remember { mutableStateOf(subscriptionToEdit?.name ?: "") }
     var priceText by remember { mutableStateOf(subscriptionToEdit?.price?.toString() ?: "14.99") }
-    var selectedCurrency by remember { mutableStateOf(subscriptionToEdit?.currency ?: "USD") }
+    var selectedCurrency by remember { mutableStateOf(subscriptionToEdit?.currency ?: "TK") }
     var selectedCycle by remember { mutableStateOf(subscriptionToEdit?.billingCycle ?: "MONTHLY") }
     var selectedCategory by remember { mutableStateOf(subscriptionToEdit?.category ?: "STREAMING") }
     var renewalDaysOffset by remember {

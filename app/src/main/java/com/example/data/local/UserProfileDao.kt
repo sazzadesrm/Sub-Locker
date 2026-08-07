@@ -22,6 +22,12 @@ interface UserProfileDao {
     @Update
     suspend fun updateUserProfile(profile: UserProfileEntity)
 
+    @Query("UPDATE user_profile SET notificationsEnabled = :enabled WHERE id = 1")
+    suspend fun updateNotificationsEnabled(enabled: Boolean)
+
+    @Query("UPDATE user_profile SET defaultReminderDays = :days WHERE id = 1")
+    suspend fun updateDefaultReminderDays(days: Int)
+
     @Query("UPDATE user_profile SET preferredCurrency = :currency WHERE id = 1")
     suspend fun updateCurrency(currency: String)
 

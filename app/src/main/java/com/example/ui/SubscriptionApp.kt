@@ -29,8 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.SubscriptionEntity
 import com.example.ui.components.AddEditSubscriptionBottomSheet
@@ -57,7 +60,8 @@ enum class NavigationTab(
 fun SubscriptionApp(
     viewModel: SubscriptionViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val haptic = LocalHapticFeedback.current
 
     var currentTab by remember { mutableStateOf(NavigationTab.DASHBOARD) }
     var showAddEditSheet by remember { mutableStateOf(false) }
@@ -84,7 +88,10 @@ fun SubscriptionApp(
                             val isSelected = currentTab == tab
                             NavigationBarItem(
                                 selected = isSelected,
-                                onClick = { currentTab = tab },
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    currentTab = tab
+                                },
                                 modifier = Modifier.testTag(tab.testTag),
                                 icon = {
                                     if (tab == NavigationTab.ALERTS && unreadCount > 0) {
@@ -134,6 +141,9 @@ fun SubscriptionApp(
                                 },
                                 onDeleteSubscription = { sub -> viewModel.deleteSubscription(sub) },
                                 onTogglePauseSubscription = { sub -> viewModel.togglePauseSubscription(sub) },
+                                onMarkSubscriptionPaid = { sub -> viewModel.markAsPaid(sub) },
+                                onCurrencyChange = { viewModel.changePreferredCurrency(it) },
+                                onRefreshRates = { viewModel.refreshData() },
                                 onNavigateToAlerts = { currentTab = NavigationTab.ALERTS }
                             )
 
@@ -145,7 +155,10 @@ fun SubscriptionApp(
                             NavigationTab.ALERTS -> AlertsScreen(
                                 state = uiState,
                                 onMarkRead = { viewModel.markNotificationRead(it) },
-                                onClearAll = { viewModel.clearAllNotifications() }
+                                onClearAll = { viewModel.clearAllNotifications() },
+                                onToggleNotifications = { viewModel.toggleNotificationsEnabled(it) },
+                                onUpdateReminderLeadTime = { viewModel.updateDefaultReminderDays(it) },
+                                onTriggerScan = { viewModel.triggerManualRenewalScan() }
                             )
 
                             NavigationTab.PROFILE -> ProfileScreen(

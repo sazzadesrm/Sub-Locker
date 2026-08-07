@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
@@ -48,16 +51,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.Currency
 import com.example.data.model.SubscriptionCategory
 import com.example.data.model.SubscriptionEntity
 import com.example.ui.SortOption
 import com.example.ui.SubscriptionUiState
+import com.example.ui.components.CategoryAnalyticsFilterCard
+import com.example.ui.components.GlobalCurrencyConverterCard
 import com.example.ui.components.SubscriptionCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     state: SubscriptionUiState,
@@ -68,9 +78,13 @@ fun DashboardScreen(
     onEditSubscription: (SubscriptionEntity) -> Unit,
     onDeleteSubscription: (SubscriptionEntity) -> Unit,
     onTogglePauseSubscription: (SubscriptionEntity) -> Unit,
+    onMarkSubscriptionPaid: (SubscriptionEntity) -> Unit = {},
+    onCurrencyChange: (String) -> Unit = {},
+    onRefreshRates: () -> Unit = {},
     onNavigateToAlerts: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     var showSortMenu by remember { mutableStateOf(false) }
 
     val formattedMonthly = Currency.format(state.totalMonthlySpend, state.preferredCurrency)
@@ -79,10 +93,15 @@ fun DashboardScreen(
     val unreadNotifications = state.notifications.count { !it.isRead }
 
     Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 88.dp)
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { onRefreshRates() },
+            modifier = Modifier.fillMaxSize()
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 88.dp)
+            ) {
             // Header Bar
             item {
                 Row(
@@ -92,18 +111,31 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = "Hello, ${state.userProfile.name.split(" ").firstOrNull() ?: "User"}",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sub_locker_logo_1786116565811),
+                            contentDescription = "Sub Locker Logo",
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
                         )
-                        Text(
-                            text = "Managing ${state.activeCount} active subscriptions",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+
+                        Column {
+                            Text(
+                                text = "Sub Locker",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Hello, ${state.userProfile.name.split(" ").firstOrNull() ?: "User"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -217,6 +249,26 @@ fun DashboardScreen(
                 }
             }
 
+            // Interactive Category Spending Analytics & Toggle Filter Card
+            item {
+                CategoryAnalyticsFilterCard(
+                    subscriptions = state.subscriptions,
+                    preferredCurrency = state.preferredCurrency,
+                    onCategoryFilterSelect = onCategoryFilterSelect,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
+
+            // Global Live Currency Converter & Switcher Tool
+            item {
+                GlobalCurrencyConverterCard(
+                    preferredCurrency = state.preferredCurrency,
+                    onCurrencyChange = onCurrencyChange,
+                    onRefreshRates = onRefreshRates,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
+
             // Upcoming Renewal Alert Banner if any sub renews within 3 days
             if (state.upcomingRenewalsCount > 0) {
                 item {
@@ -276,7 +328,10 @@ fun DashboardScreen(
 
                         Surface(
                             selected = isSelected,
-                            onClick = { onCategoryFilterSelect(categoryName) },
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onCategoryFilterSelect(categoryName)
+                            },
                             shape = RoundedCornerShape(20.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
                         ) {
@@ -315,7 +370,10 @@ fun DashboardScreen(
 
                     Box {
                         IconButton(
-                            onClick = { showSortMenu = true },
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                showSortMenu = true
+                            },
                             modifier = Modifier
                                 .background(
                                     MaterialTheme.colorScheme.surface,
@@ -345,6 +403,7 @@ fun DashboardScreen(
                                     },
                                     onClick = {
                                         showSortMenu = false
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         onSortOptionSelect(option)
                                     }
                                 )
@@ -409,15 +468,20 @@ fun DashboardScreen(
                         onEdit = { onEditSubscription(sub) },
                         onDelete = { onDeleteSubscription(sub) },
                         onTogglePause = { onTogglePauseSubscription(sub) },
+                        onMarkPaid = { onMarkSubscriptionPaid(sub) },
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
                     )
                 }
             }
         }
+    }
 
         // Floating Action Button to Add Subscription
         FloatingActionButton(
-            onClick = onAddClick,
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onAddClick()
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp)

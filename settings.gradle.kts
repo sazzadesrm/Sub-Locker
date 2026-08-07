@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Subify"
+rootProject.name = "Sub Locker"
 
 include(":app")

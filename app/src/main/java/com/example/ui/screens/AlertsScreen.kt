@@ -49,6 +49,9 @@ fun AlertsScreen(
     state: SubscriptionUiState,
     onMarkRead: (Int) -> Unit,
     onClearAll: () -> Unit,
+    onToggleNotifications: (Boolean) -> Unit = {},
+    onUpdateReminderLeadTime: (Int) -> Unit = {},
+    onTriggerScan: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
@@ -126,7 +129,8 @@ fun AlertsScreen(
                         }
                         Switch(
                             checked = state.userProfile.notificationsEnabled,
-                            onCheckedChange = { /* Handled */ }
+                            onCheckedChange = { onToggleNotifications(it) },
+                            modifier = Modifier.testTag("toggle_notifications_switch")
                         )
                     }
 
@@ -146,9 +150,10 @@ fun AlertsScreen(
                             val isSelected = state.userProfile.defaultReminderDays == days
                             Surface(
                                 selected = isSelected,
-                                onClick = { /* Lead time update */ },
+                                onClick = { onUpdateReminderLeadTime(days) },
                                 shape = RoundedCornerShape(16.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.testTag("lead_time_chip_$days")
                             ) {
                                 Text(
                                     text = "$days ${if (days == 1) "Day" else "Days"} Before",
@@ -158,6 +163,37 @@ fun AlertsScreen(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
                             }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Surface(
+                        onClick = onTriggerScan,
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("run_renewal_scan_button")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Alarm,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Scan Renewals & Trigger Local Alerts Now",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
                     }
                 }
