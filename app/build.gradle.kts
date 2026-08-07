@@ -10,17 +10,17 @@ plugins {
 }
 
 android {
-    namespace 'com.yourname.appname'
-    compileSdk 34  // <-- CHANGE THIS TO 34 or 35
+    namespace = "com.yourname.appname" // Change this to your actual package name, e.g., "com.sub.locker"
+    compileSdk = 34
 
     defaultConfig {
-        applicationId "com.yourname.appname"
-        minSdk 24      // <-- Make sure this isn't too low (some libraries require 24+)
-        targetSdk 34   // <-- CHANGE THIS TO MATCH compileSdk
-        versionCode 1
-        versionName "1.0"
+        applicationId = "com.yourname.appname"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
     }
-  }
+}
 
   signingConfigs {
     create("release") {
