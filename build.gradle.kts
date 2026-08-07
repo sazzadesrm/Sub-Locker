@@ -8,14 +8,15 @@ plugins {
   alias(libs.plugins.google.services) apply false
 }
 android {
-    namespace 'com.your.package.name'
-    compileSdk 34  // <-- Update this to 34 or higher
+    namespace 'com.yourname.appname'
+    compileSdk 34  // <-- CHANGE THIS TO 34 or 35
 
     defaultConfig {
-        applicationId "com.your.package.name"
-        minSdk 21     // <-- Sometimes a dependency requires you to raise this too
-        targetSdk 34  // <-- Update this to match
+        applicationId "com.yourname.appname"
+        minSdk 24      // <-- Make sure this isn't too low (some libraries require 24+)
+        targetSdk 34   // <-- CHANGE THIS TO MATCH compileSdk
         versionCode 1
         versionName "1.0"
     }
 }
+
